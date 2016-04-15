@@ -1,0 +1,71 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: dodwin - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Release/wizicon.res" /d "NDEBUG" "C:\Emu\dod\src\wizicon.rc"" 
+Creating temporary file "C:\WINDOWS\TEMP\RSP81F2.TMP" with contents
+[
+/nologo /MD /W3 /GX /Op /Ob2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /Fp"Release/dodwin.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\Emu\dod\src\creature.cpp"
+"C:\Emu\dod\src\dod.cpp"
+"C:\Emu\dod\src\dodgame.cpp"
+"C:\Emu\dod\src\dungeon.cpp"
+"C:\Emu\dod\src\enhanced.cpp"
+"C:\Emu\dod\src\object.cpp"
+"C:\Emu\dod\src\oslink.cpp"
+"C:\Emu\dod\src\parser.cpp"
+"C:\Emu\dod\src\player.cpp"
+"C:\Emu\dod\src\sched.cpp"
+"C:\Emu\dod\src\viewer.cpp"
+]
+Creating command line "cl.exe @C:\WINDOWS\TEMP\RSP81F2.TMP" 
+Creating temporary file "C:\WINDOWS\TEMP\RSP81F3.TMP" with contents
+[
+opengl32.lib glu32.lib GLaux.lib SDL_mixer.lib SDLmain.lib SDL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /incremental:yes /pdb:"Release/dodwin.pdb" /machine:I386 /out:"Release/dodwin.exe" 
+.\Release\creature.obj
+.\Release\dod.obj
+.\Release\dodgame.obj
+.\Release\dungeon.obj
+.\Release\enhanced.obj
+.\Release\object.obj
+.\Release\oslink.obj
+.\Release\parser.obj
+.\Release\player.obj
+.\Release\sched.obj
+.\Release\viewer.obj
+.\Release\wizicon.res
+]
+Creating command line "link.exe @C:\WINDOWS\TEMP\RSP81F3.TMP"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+Command line warning D4002 : ignoring unknown option '/Op'
+Command line warning D4002 : ignoring unknown option '/Ob2'
+creature.cpp
+dod.cpp
+dodgame.cpp
+dungeon.cpp
+enhanced.cpp
+object.cpp
+oslink.cpp
+parser.cpp
+player.cpp
+C:\Emu\dod\src\player.cpp(1654) : warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+C:\Emu\dod\src\player.cpp(1654) : warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+C:\Emu\dod\src\player.cpp(1654) : warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+C:\Emu\dod\src\player.cpp(1654) : warning C4244: 'argument' : conversion from 'int' to 'float', possible loss of data
+sched.cpp
+viewer.cpp
+Linking...
+
+
+
+<h3>Results</h3>
+dodwin.exe - 0 error(s), 6 warning(s)
+</pre>
+</body>
+</html>

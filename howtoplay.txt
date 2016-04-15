@@ -1,0 +1,315 @@
+
+Basic playing Instructions for Dungeons of Daggorath
+- by Mr. Reaper (Aaron Oliver) 6-1-2003
+
+--------------------------------------------------------------------------------
+For PC-Port specific instructions and technical stuff, view the readme.txt file.
+
+If you wish to view the full playing instructions (*recommended*), try a 
+web search. There is a lot interesting information in the full manual, plus the
+background story, which will help put you in the proper wizard-slaying mood.
+--------------------------------------------------------------------------------
+
+
+======
+Basics
+======
+
+Well, you know how it goes... Some darn evil Wizard has moved in to the Dungeons
+under Daggorath Mountains, and is generally becoming a nescience to the
+neighboring town, what with the cursing of the land and the summoning of all
+kinds of nasty monsters and all. So you've decided to take it upon yourself to
+save the town, because you have some hero complex or whatever, and you would do
+anything to impress the wenches. Ok, what do you want? Go find the full version
+if you want it to sound dramatic... I'm trying to be brief here.
+
+After you start the game, you will be able to view short demo in which you can
+see a few of the things you might face in the dungeon.
+
+Press any key to start the game. You will be transported into the dungeon and
+will be equipped with a PINE TORCH and a WOODEN SWORD in your backpack.
+
+(If at any time you want to exit the game, use the ESCAPE key.)
+
+You can see your status bar along the screen, with your heartbeat indicator in
+the middle. The left and right sides will display what you are carrying in your
+left and right hands (they will both be EMPTY when you start). The screen will
+be completely dark, because you haven't lit your TORCH yet... 
+
+Your HEARTBEAT indicates how healthy and rested you are. Your heart will beat
+faster as you suffer damage, or strain yourself physically. Any kind of physical
+activity can tax your heart, such as moving around wile carrying a heavy load of
+items, making attacks, or suffering attacks from monsters. If your heartbeat
+becomes too fast, you can lose consciousness or die. Standing still, when you
+can, will allow you to rest and slow your heartbeat down and recover from damage.
+
+As you kill monsters, your heart will grow stronger. As you descend into deeper
+levels of the dungeon, you will face far mightier creatures... The magical
+forces around you will become thicker and the air will become thinner the deeper
+you descend, making even moving around more difficult....
+Don't climb down to a deeper level until you are sure you are ready!
+
+
+========
+Commands
+========
+
+To preform an action, you have to type in a command, and then press ENTER.
+Most commands can be abbreviated with one or two letters to replace each word.
+Each word on the same line has to be separated by a space.
+
+Many commands also require you to supply an item name.
+(items are described further down)
+
+
+COMMAND                                                            ABBREVIATION
+--------------------------------------------------------------------------------
+MOVE           (take one step forward)                                   M
+MOVE BACK      (take one step backward)                                 M B
+MOVE RIGHT     (sidestep to the right)                                  M R
+MOVE LEFT      (sidestep to the left)                                   M L
+
+TURN LEFT      (turn to face your left)                                 T L
+TURN RIGHT     (turn to face your right)                                T R
+TURN AROUND    (turn completely around)                                 T A
+
+CLIMB UP       (climb up a ladder to the previous level)                C U
+CLIMB DOWN     (climb down a hole or ladder to the next level)          C D
+
+EXAMINE  (lists the things in your backpack and on the floor near you)   E
+LOOK     (go to dungeon view again after using the EXAMINE command)      L 
+
+GET LEFT item    (picks an item up off the floor, into your empty left  G L item
+GET RIGHT item    or right hand. You must specify the item to get)      G R item
+
+DROP LEFT      (drop the item from your left or right hand              D L
+DROP RIGHT      onto the floor)                                         D R
+
+PULL LEFT item    (pull an item out of your backpack, into your empty   P L item
+PULL RIGHT item    right or left hand. You must specify what item)      P R item
+
+STOW LEFT        (place the item from your left or right hand           S L
+STOW RIGHT        into your backpack)                                   S R
+
+ATTACK LEFT      (attack using the object you are holding in your       A L
+ATTACK RIGHT      left or right hand)                                   A R
+
+USE LEFT     (use the item in your left or right hand. This is only     U L
+USE RIGHT     applied to a TORCH, FLASK, or SCROLL.)                    U R
+
+REVEAL LEFT      (attempt to discover the true nature of the item       R L
+REVEAL RIGHT      in your left or right hand.)                          R R
+
+INCANT word   (attempt to activate the power of a RING by INCANTing     I word
+               it with the correct magical word.)                    
+
+
+ZSAVE name    (save your game, optionally with a specific name)         
+ZLOAD name    (load a saved game. you can specify which one to load, by name)
+              (read the section below for full description of saving/loading)
+
+
+ITEMS
+=====
+
+There are several classes of items you may find in the dungeon. Among each item
+class, there are also different types.... When you first find an item, you will
+know what class the item is, but not it's specific type (the Evil Wizard has
+used magic to hide many things in the dungeon). To determine the item's type,
+you must use the REVEAL command while holding the item in your hand. Items that
+have not been properly REVEALed will not function correctly. You often won't be
+able to successfully REVEAL an item when you first find it - try REVEALing it
+again later, after you have gained strength.
+
+Each item is listed with it's full name, and the shortest abbreviation you can
+use to specify that item. When specifying an item, you can either use it's
+generic class, such as SWORD, or you can name a specific type, such as
+WOODEN SWORD. Using the generic form will cause a command to be preformed on the
+nearest item of that class... for example, if there were both a a WOODEN SWORD
+and an IRON SWORD on the ground, the command GET RIGHT SWORD would just grab the
+nearest one... Whereas GET RIGHT IRON SWORD would grab the nearest IRON SWORD.
+
+
+-----
+TORCH
+T
+-----
+You need a lit torch to be able to see in the dungeon. Further, you will need a
+magical torch to be able to see many hidden things... Some magical monsters are
+invisible under normal light, and some walls are illusions, which can only be
+detected under magical light. As your torch grows dim, it will be harder to hit
+monsters when you attack... To light a torch, hold it in your hand and USE it.
+This will light it and mount it on your backpack, leaving your hand free.
+When using the EXAMINE command, your currently lit TORCH will be highlighted.
+
+PINE TORCH  - Provides basic lighting in the dungeon. Burns for 15 minutes.
+P T
+
+LUNAR TORCH - A bright torch that casts some magical light, lasting 30 minutes.
+LU T
+
+SOLAR TORCH - Very magical. Allows everything to be seen clearly for 60 minutes.
+SO T
+
+
+-----
+SWORD
+SW
+-----
+You need a sword in hand to effectively attack a monster. Some very strong
+monsters are resistant to non-magical attacks; some are even completely immune.
+
+WOODEN SWORD - This is what you start out with. I guess the town you are trying
+W SW           to save is REALLY poor, and couldn't afford to equip you with a 
+               proper sword, so they just gave you a sharp stick...
+
+IRON SWORD   - Much better than the wooden one, but still non-magical. You'll
+IR SW          definitely want to find one before venturing far into the dungeon.
+
+ELVISH SWORD - A very powerful magical sword. Only the strongest of warriors
+EL SW          is able to wield this awesome weapon, but even then, attacking
+               with this magical blade will cause quite a strain on your heart.
+
+
+------
+SHIELD
+SH
+------
+Carrying a shield in your hand can help deflect the force of a monster's attack.
+If you find yourself without a sword, you can also attack with a shield.
+Attacking with any other normal item is no better than using your empty hand...
+
+LEATHER SHIELD - A standard, small shield.
+LE SH
+
+BRONZE SHIELD  - A tougher, metal shield.
+B SH
+
+MITHRIL SHIELD - A magical, shield very good at blocking enemy attacks.
+M SH             It can also be used quite well as a weapon, which will
+                 even inflict some magical damage. Because of this, it's
+                 probably even more effective than the IRON SWORD as a weapon.
+
+
+-----
+FLASK
+F
+-----
+There are various types of FLASKs you may find in the dungeon. The effects of
+these magical potions will be left for you to discover on your own. Be careful
+drinking FLASKs randomly; although some can greatly aid you, others may contain
+deadly poison. To drink the contents of a FLASK, hold it in your hand and USE it.
+
+HALE FLASK
+H F
+
+ABYE FLASK
+A F
+
+THEWS FLASK
+TH F
+
+
+------
+SCROLL
+SC
+------
+You may also find magical SCROLLs within the dungeon. 
+After you have REVEALed these, they can be quite helpful.
+To activate a SCROLL, hold it in your hand and USE it.
+
+VISION SCROLL
+VI SC
+
+SEER SCROLL
+SE SC
+
+
+----
+RING
+R
+----
+Hidden within the dungeon, you my find rings of great power. These rings contain
+potent attack magic. They are used by holding them in your hand, and ATTACKing
+with them as a weapon. Using one of these will put a great strain on your heart,
+but will cause tremendous damage to your enemy. Before you can release their
+power though, you will need to determine the proper INCANTation for each ring...
+Attacking with a RING that has not been properly INCANTed will do no more
+damage than a bare fist attack.
+
+After you are able to REVEAL a ring, it's name may give you a clue to the 
+magical word you will need to INCANT in order to activate the RING's power. 
+
+As an example, if you found a RING, then REVEAL it to be a STONE RING, you might
+be able to INCANT it with the magic word 'EARTHQUAKE' (by holding the RING in
+your hand, and using the command: INCANT EARTHQUAKE). The RING would then become
+a powerful EARTHQUAKE RING that you could use as a devastating weapon. However,
+a RING's power is not limitless, and after being used a few times, the RING will
+become completely drained of power, and revert to a non-magical GOLD RING.
+
+You must use your wits to determine the correct magical words to INCANT
+each ring with. This is the most vital part in completing your quest,
+for even the evil Wizard derives his power from a RING...
+
+GOLD RING
+G R
+
+
+========
+Monsters
+========
+
+Monsters? We got monsters. We got Vipers, Spiders, Evil Knights, Smiling Blobs,
+Stone Giants, Scorpions, Wraiths, and Galdrogs. Each monster will make its own
+sound. Learning these sounds will help you determine what might be coming from
+around the corner, and how far away it is, according to how loud the sound is.
+
+As a general rule, the bigger the monster, the faster you should run. Some
+creatures are deceptively powerful for their size though... And don't be fooled
+by similar-looking monsters you encounter on deeper levels of the dungeon. Just
+because you could easily defeat that Stone Giant from the last level, doesn't
+mean his better-equiped cousin from the next level won't be able to easily stomp
+you into pudding. You will just have to learn some things from experience
+(and by 'experience', I mean 'dying a lot').
+
+Monsters will stalk you through the hallways, and will stop to pick up items
+from the floor. When you kill a monster, it will drop any items it was carrying.
+When you and a monster are standing in the same square, it will attack you. You
+will know when a monster hits you, because it will hurt a lot. What are you
+gonna do, cry about it? A better idea would be to ATTACK the monster, and then
+quickly run away before it can attack you back.
+
+Each monster you defeat will make you stronger. You will be able to deal more
+damage and withstand more attacks as you grow in power. If the big, bad monsters
+are beating you up, just go take out your frustrations on the smaller, wimpy
+monsters.... Build up those muscles picking on the weenies, and then go back and
+kick sand in the faces of those bigger monsters, just like in those old
+comic book advertisements. 
+
+There are ladders in the dungeon you can use to climb up a level, but for some
+reason, that really cheeses off the Wizard, and he will summon some really nasty
+monsters to come get you if you decide to climb up to a previous level. Coward.
+
+Also, before you ever get to the real Wizard, you will have to defeat a Demon
+that looks like the Wizard. The Demon is also wearing the Wizard's clothes.
+I don't even want to know how that happened.
+
+
+======
+SAVING
+======
+
+You can save your game by typing in ZSAVE and pressing ENTER. This will save to
+the default file name. Typing in ZLOAD will load from this file. ZSAVEing again
+like this will overwrite your previous save game. You can specify a different
+file name by adding the name after ZSAVE or ZLOAD. The name can be only one word
+(no spaces) and can have only letters (no numbers).
+
+
+
+-------------------------------------------------------------------------------
+
+Ok, I could probably go on, but I was TRYING to be brief.... :D
+I really do reccomend finding and reading over the full manaul.
+
+-------------------------------------------------------------------------------

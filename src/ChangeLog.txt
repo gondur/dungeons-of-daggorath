@@ -1,0 +1,19 @@
+Features added in 0.4.0:
+
+Added Meta-menu functionality-
+
+* Start and Abort Game Options
+* Many configurable options, including:
+** Fullscreen Mode
+** Video Resolution
+** Graphics Mode (Implementing Dan Gendreau's changes)
+** Sound Volume
+** Save Directory (Must manually modify opts.ini, this is still a todo to bring to the port)
+** Creature Speed
+** Creature Regen Times
+** Sound Modes (Implementing Dan Gendreau's changes)
+** Options to save changes and load defaults
+
+Changed format of the opts.txt file to opts.ini & it's human readable
+
+Created installer with options to install anyone's sounds from the contributions page

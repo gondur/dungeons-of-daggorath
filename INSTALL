@@ -1,0 +1,21 @@
+Dungeons of Daggorath
+PC-Port Version 0.4.0
+
+------------
+
+Unzip the tar.gz file, cd to the "src" directory and type the following commands:
+
+make
+cp dod ..
+
+To run, type cd .. and ./dod
+
+That's it!  If you want to make a shortcut to it, make sure that in the "execute" box of the short cut, you type (including the quotes):
+
+"cd <directory>;dod"
+
+where <directory> is the location of the unzipped dod executable
+
+Enjoy, if you have any problems with the port please post to the daggorath discussion forum at http://mspencer.net/daggorath
+
+Thanks
