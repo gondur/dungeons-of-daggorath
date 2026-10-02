@@ -38,13 +38,13 @@ public:
 	void		deathFadeLoop();
 	void		winFadeLoop();
 	bool		keyCheck();
-	bool		keyHandler(SDL_keysym * keysym);
+	bool		keyHandler(const SDL_KeyboardEvent * key);
 	void		Reset();
 	void		SAVE();
 	void		LOAD();
 	void		LoadSounds();
 	bool		EscCheck();
-	bool		EscHandler(SDL_keysym * keysym);
+	bool		EscHandler(const SDL_KeyboardEvent * key);
 	void		pause(bool state);
 	void		updateCreatureRegen(int newTime);
 	
@@ -67,8 +67,8 @@ public:
 	Uint32		curTime;
 	Uint32		elapsedTime;
 
-	Mix_Chunk * hrtSound[2];
-	int			hrtChannel;
+	MIX_Audio * hrtSound[2];
+	MIX_Track *	hrtChannel;
 
 	dodBYTE		ZFLAG;
 

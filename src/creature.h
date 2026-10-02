@@ -42,12 +42,12 @@ public:
 	int			CMXPTR;
 	dodBYTE		CMXLND[60];
 	dodBYTE		MOVTAB[7];
-	Mix_Chunk * creSound[12];
-	Mix_Chunk * clank;
-	Mix_Chunk * kaboom;
-	Mix_Chunk *	buzz;
-	int			creChannel;
-	int			creChannelv;
+	MIX_Audio * creSound[12];
+	MIX_Audio * clank;
+	MIX_Audio * kaboom;
+	MIX_Audio *	buzz;
+	MIX_Track *	creChannel;
+	MIX_Track *	creChannelv;
 	int			creSpeedMul;
 
 	enum { // creature ID#s

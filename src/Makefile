@@ -1,46 +1,59 @@
-CC      = @gcc -Wall -ansi
-CCLINK  = -lGL -lGLU -lSDL -lSDL_mixer
-CCFLAGS = -c -DLINUX
+CC       = g++
+PKGCONFIG = pkg-config
 
-all: dod
+# NOTE: Arch names the mixer .pc file "sdl3-mixer.pc" (hyphen). pkg-config normally
+# treats - and _ as equivalent, but the module must match what is actually installed,
+# so use the hyphenated spelling here.
+PKGS      = sdl3 sdl3-mixer
 
-dod: creature.o dod.o dodgame.o dungeon.o enhanced.o object.o oslink.o parser.o player.o sched.o viewer.o
-	$(CC) $(CCLINK) -o dod creature.o dod.o dodgame.o dungeon.o enhanced.o object.o oslink.o parser.o player.o sched.o viewer.o
+# Fail loudly and actionably rather than emitting pkg-config's error on every
+# invocation (which happens once per $(shell ...)).
+ifeq ($(shell $(PKGCONFIG) --exists $(PKGS) && echo ok),)
+$(error Missing build dependencies: $(PKGS). Install with: sudo pacman -S $(PKGS))
+endif
 
-creature.o: creature.cpp creature.h
-	$(CC) $(CCFLAGS) creature.cpp
+SDL_CFLAGS := $(shell $(PKGCONFIG) --cflags $(PKGS))
+SDL_LIBS   := $(shell $(PKGCONFIG) --libs   $(PKGS))
 
-dod.o: dod.cpp dod.h
-	$(CC) $(CCFLAGS) dod.cpp
+CXXFLAGS  = -Wall -c -DLINUX $(SDL_CFLAGS)
+LDLIBS    = $(SDL_LIBS) -lGL -lGLU
 
-dodgame.o: dodgame.cpp dodgame.h
-	$(CC) $(CCFLAGS) dodgame.cpp
+TARGET  = dod
+SRCS    = creature.cpp dod.cpp dodgame.cpp dungeon.cpp enhanced.cpp object.cpp \
+          oslink.cpp parser.cpp player.cpp sched.cpp viewer.cpp
+OBJS    = $(SRCS:.cpp=.o)
+HDRS    = creature.h dod.h dodgame.h dungeon.h enhanced.h object.h oslink.h \
+          parser.h player.h sched.h viewer.h
 
-dungeon.o: dungeon.cpp dungeon.h
-	$(CC) $(CCFLAGS) dungeon.cpp
+all: $(TARGET)
 
-enhanced.o: enhanced.cpp enhanced.h
-	$(CC) $(CCFLAGS) enhanced.cpp
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 
-object.o: object.cpp object.h
-	$(CC) $(CCFLAGS) object.cpp
+%.o: %.cpp $(HDRS)
+	$(CC) $(CXXFLAGS) -o $@ $<
 
-oslink.o: oslink.cpp oslink.h
-	$(CC) $(CCFLAGS) oslink.cpp
+# Copy the binary to the repo root, which is what ./dod.sh and the checked-in
+# launcher expect. The binary does not have to *live* in the root - it only has
+# to be *run* from there, because conf/, sound/ and saved/ are resolved relative
+# to the working directory. `cd .. && ./src/dod` works just as well.
+install: $(TARGET)
+	cp -f $(TARGET) ../dod
+	chmod +x ../dod
+	@echo "Installed ../dod - run it with: ./dod"
 
-parser.o: parser.cpp parser.h
-	$(CC) $(CCFLAGS) parser.cpp
-
-player.o: player.cpp player.h
-	$(CC) $(CCFLAGS) player.cpp
-
-sched.o: sched.cpp sched.h
-	$(CC) $(CCFLAGS) sched.cpp
-
-viewer.o: viewer.cpp viewer.h
-	$(CC) $(CCFLAGS) viewer.cpp
+# Syntax-only check across every translation unit. This is the Pass 0 gate.
+.PHONY: syntax
+syntax:
+	@for f in $(SRCS); do \
+		echo "  [syntax] $$f"; \
+		$(CC) $(CXXFLAGS) -fsyntax-only $$f || exit 1; \
+	done; \
+	echo "All translation units parse cleanly."
 
 clean:
 	@echo -n Cleaning...
-	@rm *.o;rm dod
+	@rm -f $(OBJS) $(TARGET)
 	@echo Done
+
+.PHONY: all install syntax clean

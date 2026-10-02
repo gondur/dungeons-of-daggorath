@@ -156,9 +156,11 @@ void printvls()
 */
 }
 
-Mix_Chunk *Utils::LoadSound(char *snd)
+MIX_Audio *Utils::LoadSound(char *snd)
 {
 	char fn[256];
 	sprintf(fn, "%s%s%s", oslink.soundDir, oslink.pathSep, snd);
-	return Mix_LoadWAV(fn);
+	// predecode == false: let SDL3_mixer decompress on the fly while mixing,
+	// which is the closest match to Mix_LoadWAV's behavior in SDL_mixer 1.2.
+	return MIX_LoadAudio(oslink.mixer, fn, false);
 }

@@ -37,7 +37,7 @@ void Object::Reset()
 	OBJTYP = 0;
 	OBJCLS = 0;
 	SPEFLG = 0;
-	objChannel=1;
+	// objChannel is assigned from OS_Link during init(); see Creature::Reset().
 
 	ODBTAB[0] = ODB(OBJT_RING, 255, 0, 5);		// Supreme Ring
 	ODBTAB[1] = ODB(OBJT_RING, 170, 0, 5);		// Joule Ring

@@ -41,10 +41,11 @@ extern Scheduler	scheduler;
 extern Parser		parser;
 
 // Constructor
-OS_Link::OS_Link() : width(0), height(0), bpp(0), flags(0),
-					 audio_rate(44100), audio_format(AUDIO_S16),
+OS_Link::OS_Link() : width(0), height(0),
+					 window(NULL), glContext(NULL), mixer(NULL),
+					 audio_rate(44100), audio_format(SDL_AUDIO_S16LE),
 					 audio_channels(2), audio_buffers(512),
-					 gamefileLen(50), keylayout(0), keyLen(256)
+					 gamefileLen(50), keylayout(0)
 {
 	printf ("OS_LINK Constructor");
 #define MACOSX
@@ -72,105 +73,127 @@ void OS_Link::init()
 	loadOptFile();
 
 	Uint32 ticks1, ticks2;
-	const SDL_VideoInfo * info = '\0';
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_AUDIO) < 0)
+	// SDL_INIT_TIMER is gone in SDL3; the timer subsystem is always available
+	// and SDL_GetTicks() works without being initialized.
+	if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 	{
 		fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
 		quitSDL(1);
 	}
 
-	if(Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
+	// SDL3_mixer requires an explicit MIX_Init() followed by creating a mixer.
+	// SDL_mixer 1.2's Mix_OpenAudio() did both implicitly.
+	if(!MIX_Init())
+	{
+		fprintf(stderr, "Unable to initialize audio!\n");
+		quitSDL(1);
+	}
+
+	// The audio_rate/format/channels/buffers fields are retained from the
+	// original code but SDL3_mixer converts formats itself, so we let it pick
+	// a reasonable device default rather than forcing a spec. Note the device
+	// must be SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK (0xFFFFFFFF) - passing a
+	// literal 0 fails with "Invalid audio device instance ID".
+	mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+	if(!mixer)
 	{
 		fprintf(stderr, "Unable to open audio!\n");
 		quitSDL(1);
 	}
+
+	// Mix_AllocateChannels(4) pre-created four channels; SDL3_mixer creates
+	// tracks one at a time, so create the same four here. The per-subsystem
+	// members are assigned from these tracks below.
+	MIX_Track * trackHrt   = createTrack();  // was channel 0
+	MIX_Track * trackMain  = createTrack();  // was channel 1
+	MIX_Track * trackVoice = createTrack();  // was channel 2
+	MIX_Track * trackFade  = createTrack();  // was channel 3
+
+	scheduler.hrtChannel  = trackHrt;
+	creature.creChannel  = trackMain;
+	object.objChannel    = trackMain;
+	creature.creChannelv = trackVoice;
+	viewer.fadChannel    = trackFade;
 
 	creature.LoadSounds();
 	object.LoadSounds();
 	scheduler.LoadSounds();
 	player.LoadSounds();
 
-	Mix_AllocateChannels(4);
-	Mix_Volume(-1, MIX_MAX_VOLUME);
-	
-	info = SDL_GetVideoInfo();
-	if(!info)
-	{
-		fprintf(stderr, "Video query failed: %s\n", SDL_GetError());
-		quitSDL(1);
-	}
-	bpp = info->vfmt->BitsPerPixel;
+	setMasterGain(DOD_MIX_MAX_VOLUME);
+
+	// GL attributes must be set before the window/context is created. The 5-bit
+	// RGB request reproduces the original CoCo-era color depth.
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 5);
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 5);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	flags = SDL_OPENGL;
 
 	changeVideoRes(width); // All changing video res code was moved here
-	SDL_WM_SetCaption("Dungeons of Daggorath", "");
 
-	memset(keys, parser.C_SP, keyLen);
-
+	keys.clear();
+	// Every key the parser does not explicitly map yields a space, which
+	// preserves the original behavior of memset(keys, C_SP) over the table.
 	if (keylayout == 0) // QWERTY
 	{
-		keys[SDLK_a] = 'A';
-		keys[SDLK_b] = 'B';
-		keys[SDLK_c] = 'C';
-		keys[SDLK_d] = 'D';
-		keys[SDLK_e] = 'E';
-		keys[SDLK_f] = 'F';
-		keys[SDLK_g] = 'G';
-		keys[SDLK_h] = 'H';
-		keys[SDLK_i] = 'I';
-		keys[SDLK_j] = 'J';
-		keys[SDLK_k] = 'K';
-		keys[SDLK_l] = 'L';
-		keys[SDLK_m] = 'M';
-		keys[SDLK_n] = 'N';
-		keys[SDLK_o] = 'O';
-		keys[SDLK_p] = 'P';
-		keys[SDLK_q] = 'Q';
-		keys[SDLK_r] = 'R';
-		keys[SDLK_s] = 'S';
-		keys[SDLK_t] = 'T';
-		keys[SDLK_u] = 'U';
-		keys[SDLK_v] = 'V';
-		keys[SDLK_w] = 'W';
-		keys[SDLK_x] = 'X';
-		keys[SDLK_y] = 'Y';
-		keys[SDLK_z] = 'Z';
+		keys[SDLK_A] = 'A';
+		keys[SDLK_B] = 'B';
+		keys[SDLK_C] = 'C';
+		keys[SDLK_D] = 'D';
+		keys[SDLK_E] = 'E';
+		keys[SDLK_F] = 'F';
+		keys[SDLK_G] = 'G';
+		keys[SDLK_H] = 'H';
+		keys[SDLK_I] = 'I';
+		keys[SDLK_J] = 'J';
+		keys[SDLK_K] = 'K';
+		keys[SDLK_L] = 'L';
+		keys[SDLK_M] = 'M';
+		keys[SDLK_N] = 'N';
+		keys[SDLK_O] = 'O';
+		keys[SDLK_P] = 'P';
+		keys[SDLK_Q] = 'Q';
+		keys[SDLK_R] = 'R';
+		keys[SDLK_S] = 'S';
+		keys[SDLK_T] = 'T';
+		keys[SDLK_U] = 'U';
+		keys[SDLK_V] = 'V';
+		keys[SDLK_W] = 'W';
+		keys[SDLK_X] = 'X';
+		keys[SDLK_Y] = 'Y';
+		keys[SDLK_Z] = 'Z';
 		keys[SDLK_BACKSPACE] = parser.C_BS;
 		keys[SDLK_RETURN] = parser.C_CR;
 		keys[SDLK_SPACE] = parser.C_SP;
 	}
 	else if (keylayout == 1) // Dvorak
 	{
-		keys[SDLK_a] = 'A';
-		keys[SDLK_n] = 'B';
-		keys[SDLK_i] = 'C';
-		keys[SDLK_h] = 'D';
-		keys[SDLK_d] = 'E';
-		keys[SDLK_y] = 'F';
-		keys[SDLK_u] = 'G';
-		keys[SDLK_j] = 'H';
-		keys[SDLK_g] = 'I';
-		keys[SDLK_c] = 'J';
-		keys[SDLK_v] = 'K';
-		keys[SDLK_p] = 'L';
-		keys[SDLK_m] = 'M';
-		keys[SDLK_l] = 'N';
-		keys[SDLK_s] = 'O';
-		keys[SDLK_r] = 'P';
-		keys[SDLK_x] = 'Q';
-		keys[SDLK_o] = 'R';
+		keys[SDLK_A] = 'A';
+		keys[SDLK_N] = 'B';
+		keys[SDLK_I] = 'C';
+		keys[SDLK_H] = 'D';
+		keys[SDLK_D] = 'E';
+		keys[SDLK_Y] = 'F';
+		keys[SDLK_U] = 'G';
+		keys[SDLK_J] = 'H';
+		keys[SDLK_G] = 'I';
+		keys[SDLK_C] = 'J';
+		keys[SDLK_V] = 'K';
+		keys[SDLK_P] = 'L';
+		keys[SDLK_M] = 'M';
+		keys[SDLK_L] = 'N';
+		keys[SDLK_S] = 'O';
+		keys[SDLK_R] = 'P';
+		keys[SDLK_X] = 'Q';
+		keys[SDLK_O] = 'R';
 		keys[SDLK_SEMICOLON] = 'S';
-		keys[SDLK_k] = 'T';
-		keys[SDLK_f] = 'U';
+		keys[SDLK_K] = 'T';
+		keys[SDLK_F] = 'U';
 		keys[SDLK_PERIOD] = 'V';
 		keys[SDLK_COMMA] = 'W';
-		keys[SDLK_b] = 'X';
-		keys[SDLK_t] = 'Y';
+		keys[SDLK_B] = 'X';
+		keys[SDLK_T] = 'Y';
 		keys[SDLK_SLASH] = 'Z';
 		keys[SDLK_BACKSPACE] = parser.C_BS;
 		keys[SDLK_RETURN] = parser.C_CR;
@@ -235,34 +258,205 @@ void OS_Link::process_events()
 	{
 		switch(event.type)
 		{
-		case SDL_KEYDOWN:
-			handle_key_down(&event.key.keysym);
+		case SDL_EVENT_KEY_DOWN:
+			handle_key_down(&event.key);
 			break;
-		case SDL_QUIT:
+		case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+			syncViewport();
+			break;
+		case SDL_EVENT_QUIT:
 			quitSDL(0);
-			break;
-		case SDL_VIDEOEXPOSE:
-			SDL_GL_SwapBuffers();
 			break;
 		}
 	}
 }
 
+// Determines the real pixel size of the area we are drawing into.
+//
+// This is subtle and was the cause of the "renders into one corner" bug. In
+// fullscreen the compositor owns the final size and ignores the resolution we
+// asked for, so SDL keeps reporting the *requested* size (1024x768) even
+// though the real drawable is the whole display (e.g. 1920x1080). Asking
+// SDL_GetWindowSizeInPixels() therefore gives the wrong answer for exactly the
+// case where it matters. In windowed mode the window is not resized, so the
+// window size is correct and is what we want.
+//
+// Returns false if no usable size could be determined.
+bool OS_Link::queryDrawableSize(int * w, int * h)
+{
+	const SDL_DisplayMode * mode;
+
+	if(!window)
+	{
+		return false;
+	}
+
+	if(FullScreen)
+	{
+		SDL_DisplayID displayID = SDL_GetDisplayForWindow(window);
+
+		if(displayID == 0)
+		{
+			displayID = SDL_GetPrimaryDisplay();
+		}
+		mode = SDL_GetCurrentDisplayMode(displayID);
+		if(mode && mode->w > 0 && mode->h > 0)
+		{
+			*w = mode->w;
+			*h = mode->h;
+			return true;
+		}
+		return false;
+	}
+
+	return SDL_GetWindowSizeInPixels(window, w, h) && *w > 0 && *h > 0;
+}
+
+// Re-reads the real drawable size and rebuilds the viewport, projection and
+// centering offsets. Called after any size change so the picture never
+// straddles the window edge.
+void OS_Link::syncViewport()
+{
+	int w = 0, h = 0;
+
+	if(!window || !glContext)
+	{
+		return;
+	}
+	if(!queryDrawableSize(&w, &h))
+	{
+		return;
+	}
+	if(w == width && h == height)
+	{
+		return;
+	}
+
+	width  = w;
+	height = h;
+	crd.setCurWH((double) width, (double) height);
+
+	SDL_GL_MakeCurrent(window, glContext);
+	viewer.setup_opengl();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
 // Quits application
 void OS_Link::quitSDL(int code)
 {
-	Mix_CloseAudio();
+	if(mixer)
+	{
+		MIX_DestroyMixer(mixer);
+		mixer = NULL;
+	}
+	MIX_Quit();
 	SDL_Quit();
 	exit(code);
 }
 
+// Translates an SDL keycode into the character code the parser expects.
+dodBYTE OS_Link::keyToChar(SDL_Keycode keycode, dodBYTE deflt)
+{
+	std::map<SDL_Keycode, dodBYTE>::const_iterator it;
+
+	it = keys.find(keycode);
+	if(it == keys.end())
+	{
+		return deflt;
+	}
+	return it->second;
+}
+
+// Audio wrappers. These adapt the SDL_mixer 1.2 channel-based API this game
+// was written against to the SDL3_mixer track-based API, while preserving the
+// original integer 0-128 volume semantics at every call site.
+void OS_Link::playSound(MIX_Track * track, MIX_Audio * audio, int loops)
+{
+	SDL_PropertiesID options;
+
+	if(!track || !audio)
+	{
+		return;
+	}
+
+	MIX_SetTrackAudio(track, audio);
+
+	// loops == 0 means "play once" in both APIs; -1 means loop forever.
+	options = SDL_CreateProperties();
+	SDL_SetNumberProperty(options, MIX_PROP_PLAY_LOOPS_NUMBER, loops);
+	MIX_PlayTrack(track, options);
+	SDL_DestroyProperties(options);
+}
+
+void OS_Link::stopSound(MIX_Track * track)
+{
+	if(!track)
+	{
+		return;
+	}
+	MIX_StopTrack(track, 0);
+}
+
+bool OS_Link::isSoundPlaying(MIX_Track * track)
+{
+	if(!track)
+	{
+		return false;
+	}
+	return MIX_TrackPlaying(track);
+}
+
+// Converts the historical int 0-128 volume into SDL3_mixer's 0.0-1.0 gain.
+void OS_Link::setTrackGain(MIX_Track * track, int volume)
+{
+	if(!track)
+	{
+		return;
+	}
+	MIX_SetTrackGain(track, (float) volume / (float) DOD_MIX_MAX_VOLUME);
+}
+
+// setMasterGain() sets the volume of *every* channel; the equivalent in
+// SDL3_mixer is the mixer's master gain.
+void OS_Link::setMasterGain(int volume)
+{
+	if(!mixer)
+	{
+		return;
+	}
+	MIX_SetMixerGain(mixer, (float) volume / (float) DOD_MIX_MAX_VOLUME);
+}
+
+void OS_Link::setTrackPanning(MIX_Track * track, int left, int right)
+{
+	MIX_StereoGains gains;
+
+	if(!track)
+	{
+		return;
+	}
+	gains.left  = (float) left  / 255.0f;
+	gains.right = (float) right / 255.0f;
+	MIX_SetTrackStereo(track, &gains);
+}
+
+MIX_Track * OS_Link::createTrack()
+{
+	if(!mixer)
+	{
+		return NULL;
+	}
+	return MIX_CreateTrack(mixer);
+}
+
 // Processes key strokes.
-void OS_Link::handle_key_down(SDL_keysym * keysym)
+void OS_Link::handle_key_down(const SDL_KeyboardEvent * key)
 {
 	dodBYTE c;
 	if (viewer.display_mode == Viewer::MODE_MAP)
 	{
-		switch(keysym->sym)
+		switch(key->key)
 		{
 		case SDLK_ESCAPE:
 			main_menu();
@@ -277,7 +471,7 @@ void OS_Link::handle_key_down(SDL_keysym * keysym)
 	}
 	else
 	{
-		switch(keysym->sym)
+		switch(key->key)
 		{
 		case SDLK_RSHIFT:
 		case SDLK_LSHIFT:
@@ -287,13 +481,10 @@ void OS_Link::handle_key_down(SDL_keysym * keysym)
 		case SDLK_LALT:
 		case SDLK_RMETA:
 		case SDLK_LMETA:
-		case SDLK_LSUPER:
-		case SDLK_RSUPER:
 		case SDLK_MODE:
-		case SDLK_COMPOSE:
-		case SDLK_NUMLOCK:
+		case SDLK_NUMLOCKCLEAR:
 		case SDLK_CAPSLOCK:
-		case SDLK_SCROLLOCK:
+		case SDLK_SCROLLLOCK:
 			// ignore these keys
 			return;
 
@@ -311,7 +502,7 @@ void OS_Link::handle_key_down(SDL_keysym * keysym)
 //		case SDLK_RIGHTBRACKET: c = '}'; break;
 
 		default:
-			c = keys[keysym->sym];
+			c = keyToChar(key->key, parser.C_SP);
 			break;
 		}
 		parser.KBDPUT(c);
@@ -342,8 +533,8 @@ bool OS_Link::main_menu()
    {
    switch(event.type)
      {
-     case SDL_KEYDOWN:
-      switch(event.key.keysym.sym)
+     case SDL_EVENT_KEY_DOWN:
+      switch(event.key.key)
         {
         case SDLK_RETURN:
 	 end = menu_return(col, row, mainMenu);
@@ -375,11 +566,8 @@ bool OS_Link::main_menu()
         }
       viewer.drawMenu(mainMenu, col, row);
       break;
-     case SDL_QUIT:
+     case SDL_EVENT_QUIT:
       quitSDL(0);
-      break;
-     case SDL_VIDEOEXPOSE:
-      SDL_GL_SwapBuffers();
       break;
       }
      }
@@ -546,7 +734,7 @@ switch(menu_id)
    // Volume
    {
    volumeLevel = menu_scrollbar("VOLUME LEVEL", 0, 128, volumeLevel);
-   Mix_Volume(-1, volumeLevel);
+   setMasterGain(volumeLevel);
    }
    return false;
    break;
@@ -710,14 +898,11 @@ switch(menu_id)
      {
      switch(event.type)
       {
-      case SDL_KEYDOWN:
+      case SDL_EVENT_KEY_DOWN:
        return false;
        break;
-      case SDL_QUIT:
+      case SDL_EVENT_QUIT:
        quitSDL(0);  // Quits SDL
-       break;
-      case SDL_VIDEOEXPOSE:
-       SDL_GL_SwapBuffers();
        break;
       }
      }
@@ -751,8 +936,8 @@ int OS_Link::menu_list(int x, int y, char *title, char *list[], int listSize)
    {
    switch(event.type)
      {
-     case SDL_KEYDOWN:
-      switch(event.key.keysym.sym)
+     case SDL_EVENT_KEY_DOWN:
+      switch(event.key.key)
         {
         case SDLK_RETURN:
          return(currentChoice);
@@ -774,11 +959,8 @@ int OS_Link::menu_list(int x, int y, char *title, char *list[], int listSize)
 	 break;
         }
       break;
-     case SDL_QUIT:
+     case SDL_EVENT_QUIT:
       quitSDL(0);
-      break;
-     case SDL_VIDEOEXPOSE:
-      SDL_GL_SwapBuffers();
       break;
       }
      }
@@ -818,8 +1000,8 @@ int OS_Link::menu_scrollbar(char *title, int min, int max, int current)
     {
     switch(event.type)
       {
-      case SDL_KEYDOWN:
-       switch(event.key.keysym.sym)
+      case SDL_EVENT_KEY_DOWN:
+       switch(event.key.key)
         {
         case SDLK_RETURN:
          return(current + min);  // Readjust back to absolute value
@@ -842,11 +1024,8 @@ int OS_Link::menu_scrollbar(char *title, int min, int max, int current)
 	}
        viewer.drawMenuScrollbar(title, (current - newMin) / increment);
        break;
-      case SDL_QUIT:
+      case SDL_EVENT_QUIT:
        quitSDL(0);
-       break;
-      case SDL_VIDEOEXPOSE:
-       SDL_GL_SwapBuffers();
        break;
       }
     }
@@ -874,8 +1053,8 @@ void OS_Link::menu_string(char *newString, char *title, int maxLength)
    {
    switch(event.type)
      {
-     case SDL_KEYDOWN:
-      switch(event.key.keysym.sym)
+     case SDL_EVENT_KEY_DOWN:
+      switch(event.key.key)
         {
         case SDLK_RETURN:
          return;
@@ -889,13 +1068,10 @@ void OS_Link::menu_string(char *newString, char *title, int maxLength)
         case SDLK_LALT:
         case SDLK_RMETA:
         case SDLK_LMETA:
-        case SDLK_LSUPER:
-        case SDLK_RSUPER:
         case SDLK_MODE:
-        case SDLK_COMPOSE:
-        case SDLK_NUMLOCK:
+        case SDLK_NUMLOCKCLEAR:
         case SDLK_CAPSLOCK:
-        case SDLK_SCROLLOCK:
+        case SDLK_SCROLLLOCK:
         case SDLK_UP:
         case SDLK_DOWN:
           // ignore these keys
@@ -920,18 +1096,15 @@ void OS_Link::menu_string(char *newString, char *title, int maxLength)
 	 if(strlen(newString) < maxLength)
 	  {
 	  *(newString + strlen(newString) + 1) = '\0';
-	  *(newString + strlen(newString)) = keys[event.key.keysym.sym];
+	  *(newString + strlen(newString)) = keyToChar(event.key.key, parser.C_SP);
           viewer.drawMenuStringTitle(title);  // Update with the new word
           viewer.drawMenuString(newString);
 	  }
 	 break;
         }
       break;
-     case SDL_QUIT:
+     case SDL_EVENT_QUIT:
       quitSDL(0);
-      break;
-     case SDL_VIDEOEXPOSE:
-      SDL_GL_SwapBuffers();
       break;
       }
      }
@@ -1128,7 +1301,7 @@ void OS_Link::loadDefaults(void)
  player.turnDelay = 37;
  player.moveDelay = 500;
  keylayout   = 0;
- volumeLevel = MIX_MAX_VOLUME;
+ volumeLevel = DOD_MIX_MAX_VOLUME;
  creature.creSpeedMul = 200;
  creature.UpdateCreSpeed();
  strcpy(savedDir, "saved");
@@ -1160,47 +1333,65 @@ void OS_Link::changeFullScreen(void)
 void OS_Link::changeVideoRes(int newWidth)
  {
  int newHeight;
-
- SDL_Surface * surface;
- const SDL_VideoInfo * info = NULL;
- surface = SDL_GetVideoSurface();
-
- info = SDL_GetVideoInfo();
- if(!info)
-  {
-  fprintf(stderr, "Video query failed: %s\n", SDL_GetError());
-  quitSDL(1);
-  }
+ SDL_WindowFlags wflags;
 
  newHeight = (int) (newWidth * 0.75);
 
+ wflags = SDL_WINDOW_OPENGL;
  if(FullScreen)
   {
-  flags |= SDL_FULLSCREEN;
-  SDL_ShowCursor(SDL_DISABLE);
+  wflags |= SDL_WINDOW_FULLSCREEN;
+  SDL_ShowCursor();
+  SDL_HideCursor();
   }
  else
   {
-  flags &= ~(SDL_FULLSCREEN);
-  SDL_ShowCursor(SDL_ENABLE);
+  // Deliberately NOT SDL_WINDOW_RESIZABLE. The window should be exactly the
+  // selected game resolution; letting the compositor resize it decouples the
+  // GL viewport from the window and the picture ends up drawn partly outside.
+  SDL_ShowCursor();
   }
 
- if((surface = SDL_SetVideoMode(newWidth, newHeight, bpp, flags)) == 0)
+ // Recreate the window rather than resizing it. SDL3 has no SDL_SetVideoMode()
+ // equivalent, and the GL context is invalidated when the window is destroyed,
+ // so this is the only correct place to (re)establish both.
+ if(window)
   {
-  fprintf(stderr, "Video mode set failed: %s\nReturning to old mode\n", SDL_GetError());
-  if((surface = SDL_SetVideoMode(width, height, bpp, flags)) == 0)
-    {
-    fprintf(stderr, "Video mode set failed, this should be impossible\n Debug OS_Link.changeVideoRes\nSDL Reported %s\n", SDL_GetError());
-    exit(1);
-    }
+  SDL_GL_DestroyContext(glContext);
+  SDL_DestroyWindow(window);
+  window = NULL;
+  glContext = NULL;
   }
- else
+
+ window = SDL_CreateWindow("Dungeons of Daggorath",
+                           newWidth, newHeight, wflags);
+ if(!window)
   {
-  width  = newWidth;
-  height = newHeight;
-  crd.setCurWH((double) width);
+  fprintf(stderr, "Window creation failed: %s\n", SDL_GetError());
+  exit(1);
   }
-  
+
+ glContext = SDL_GL_CreateContext(window);
+ if(!glContext)
+  {
+  fprintf(stderr, "GL context creation failed: %s\n", SDL_GetError());
+  exit(1);
+  }
+
+ SDL_GL_MakeCurrent(window, glContext);
+
+ // Use the ACTUAL drawable size, not the size we asked for. In fullscreen the
+ // compositor owns the final size; see queryDrawableSize() for why asking SDL
+ // directly would be wrong. Both the GL viewport and the centering offsets must
+ // be derived from this same real size.
+ if(!queryDrawableSize(&width, &height))
+  {
+   width  = newWidth;
+   height = newHeight;
+  }
+
+ crd.setCurWH((double) width, (double) height);
+
  viewer.setup_opengl();
  glMatrixMode(GL_MODELVIEW);
  glLoadIdentity();

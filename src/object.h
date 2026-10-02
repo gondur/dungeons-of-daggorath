@@ -46,8 +46,8 @@ public:
 	dodBYTE		OBJCLS;
 	dodBYTE		SPEFLG;
 	int			OBJWGT[6];
-	int			objChannel;
-	Mix_Chunk *	objSound[6];
+	MIX_Track *	objChannel;
+	MIX_Audio *	objSound[6];
 
 	// Constants
 	enum {

@@ -42,8 +42,8 @@ Creature::Creature()
 
 void Creature::Reset()
 {
-	creChannel=1;
-	creChannelv=2;
+	// Tracks are owned by OS_Link and created during init(); they must not be
+	// reset here, or every game restart would drop the pointers.
 	creSpeedMul=100;
 
 	CMXPTR = 0;
@@ -361,8 +361,8 @@ int Creature::CMOVE(int task, int cidx)
 			CCBLND[cidx].P_CCCOL == player.PCOL)
 		{
 			// do creature sound
-			Mix_PlayChannel(creChannel, creSound[CCBLND[cidx].creature_id], 0);
-			while (Mix_Playing(creChannel) == 1)
+			oslink.playSound(creChannel, creSound[CCBLND[cidx].creature_id], 0);
+			while (oslink.isSoundPlaying(creChannel) == 1)
 			{
 				if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 				{
@@ -413,8 +413,8 @@ int Creature::CMOVE(int task, int cidx)
 					player.PDAM))
 				{
 					// make CLANK sound
-					Mix_PlayChannel(creChannel, clank, 0);
-					while (Mix_Playing(creChannel) == 1)
+					oslink.playSound(creChannel, clank, 0);
+					while (oslink.isSoundPlaying(creChannel) == 1)
 					{
 						if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 						{
@@ -717,12 +717,12 @@ bool Creature::CWALK(dodBYTE dir, CCB * cr)
 				if (panl>255) panl=255;
 
 				// pan the sound effect before playing it
-				Mix_SetPanning(creChannelv, panl, panr);
+				oslink.setTrackPanning(creChannelv, panl, panr);
 			}
 
-			Mix_Volume(creChannelv, (MIX_MAX_VOLUME / 8) * (9 - big) );
-			Mix_PlayChannel(creChannelv, creSound[cr->creature_id], 0);
-			while (Mix_Playing(creChannelv) == 1)
+			oslink.setTrackGain(creChannelv, (DOD_MIX_MAX_VOLUME / 8) * (9 - big) );
+			oslink.playSound(creChannelv, creSound[cr->creature_id], 0);
+			while (oslink.isSoundPlaying(creChannelv) == 1)
 			{
 				if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 				{

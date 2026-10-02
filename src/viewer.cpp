@@ -38,7 +38,7 @@ int ClearColor = 0;
 
 // Constructor
 Viewer::Viewer() : VCNTRX(128), VCNTRY(76),
-				   fadChannel(3), buzzStep(300), midPause(2500),
+				   fadChannel(NULL), buzzStep(300), midPause(2500),
 				   prepPause(2500)
 {
 	Utils::LoadFromDecDigit(A_VLA, "411212717516167572757582823535424");
@@ -403,7 +403,7 @@ void Viewer::draw_game()
 		glClearColor(bgColor[0], bgColor[1], bgColor[2], 0.0);
 		glLoadIdentity();
 		MAPPER();
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 	}
 	else
 	{
@@ -439,7 +439,7 @@ void Viewer::draw_game()
 		// Draw Text Area
 		drawArea(&TXTPRI);
 
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 	}
 	UPDATE = 0;
 }
@@ -490,13 +490,13 @@ bool Viewer::ShowFade(int fadeMode)
 	SETSCL();
 
 	// Start buzz
-	Mix_Volume(fadChannel, 0);
-	Mix_PlayChannel(fadChannel, creature.buzz, -1);
+	oslink.setTrackGain(fadChannel, 0);
+	oslink.playSound(fadChannel, creature.buzz, -1);
 
 	for (VCTFAD = 32; (VCTFAD & 128) == 0; VCTFAD -= 2)
 	{
 		// Set volume of buzz
-		Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+		oslink.setTrackGain(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		glMatrixMode(GL_MODELVIEW);
@@ -505,7 +505,7 @@ bool Viewer::ShowFade(int fadeMode)
 		glColor3fv(fgColor);
 		glLoadIdentity();
 		drawVectorList(wiz);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 
 		ticks1 = SDL_GetTicks();
 		do
@@ -513,7 +513,7 @@ bool Viewer::ShowFade(int fadeMode)
 			ticks2 = SDL_GetTicks();
 			if (fadeMode == 1 && scheduler.keyCheck())
 			{
-				Mix_HaltChannel(fadChannel);
+				oslink.stopSound(fadChannel);
 				clearArea(&TXTPRI);
 				while(SDL_PollEvent(&event)) ; // clear event buffer
 				return false;
@@ -524,14 +524,14 @@ bool Viewer::ShowFade(int fadeMode)
 	VCTFAD = 0;
 
 	// do crash
-	Mix_HaltChannel(fadChannel);
-	Mix_Volume(fadChannel, oslink.volumeLevel);
-	Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-	while (Mix_Playing(fadChannel) == 1)
+	oslink.stopSound(fadChannel);
+	oslink.setTrackGain(fadChannel, oslink.volumeLevel);
+	oslink.playSound(fadChannel, creature.kaboom, 0);
+	while (oslink.isSoundPlaying(fadChannel) == 1)
 	{
 		if (fadeMode == 1 && scheduler.keyCheck())
 		{
-			Mix_HaltChannel(fadChannel);
+			oslink.stopSound(fadChannel);
 			clearArea(&TXTPRI);
 			while(SDL_PollEvent(&event)) ; // clear event buffer
 			return false;
@@ -547,7 +547,7 @@ bool Viewer::ShowFade(int fadeMode)
 	glLoadIdentity();
 	drawVectorList(wiz);
 	drawArea(&TXTPRI);
-	SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(oslink.window);
 
 	if (fadeMode < 3)
 	{
@@ -565,7 +565,7 @@ bool Viewer::ShowFade(int fadeMode)
 			glLoadIdentity();
 			drawVectorList(wiz);
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 
 			if (fadeMode != 2 && scheduler.keyCheck())
 			{
@@ -583,15 +583,15 @@ bool Viewer::ShowFade(int fadeMode)
 		glColor3fv(fgColor);
 		glLoadIdentity();
 		drawVectorList(wiz);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 
 		// do crash
-		Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-		while (Mix_Playing(fadChannel) == 1)
+		oslink.playSound(fadChannel, creature.kaboom, 0);
+		while (oslink.isSoundPlaying(fadChannel) == 1)
 		{
 			if (fadeMode != 2 && scheduler.keyCheck())
 			{
-				Mix_HaltChannel(fadChannel);
+				oslink.stopSound(fadChannel);
 				clearArea(&TXTPRI);
 				while(SDL_PollEvent(&event)) ; // clear event buffer
 				return false;
@@ -599,13 +599,13 @@ bool Viewer::ShowFade(int fadeMode)
 		}
 
 		// start buzz again
-		Mix_Volume(fadChannel, 0);
-		Mix_PlayChannel(fadChannel, creature.buzz, -1);
+		oslink.setTrackGain(fadChannel, 0);
+		oslink.playSound(fadChannel, creature.buzz, -1);
 
 		for (VCTFAD = 0; VCTFAD <= 32; VCTFAD += 2)
 		{
 			// Set volume of buzz
-			Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+			oslink.setTrackGain(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
 
 			glClear(GL_COLOR_BUFFER_BIT);
 			glMatrixMode(GL_MODELVIEW);
@@ -614,7 +614,7 @@ bool Viewer::ShowFade(int fadeMode)
 			glColor3fv(fgColor);
 			glLoadIdentity();
 			drawVectorList(wiz);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 
 			ticks1 = SDL_GetTicks();
 			do
@@ -622,7 +622,7 @@ bool Viewer::ShowFade(int fadeMode)
 				ticks2 = SDL_GetTicks();
 				if (fadeMode != 2 && scheduler.keyCheck())
 				{
-					Mix_HaltChannel(fadChannel);
+					oslink.stopSound(fadChannel);
 					clearArea(&TXTPRI);
 					while(SDL_PollEvent(&event)) ; // clear event buffer
 					return false;
@@ -631,7 +631,7 @@ bool Viewer::ShowFade(int fadeMode)
 		}
 	}
 
-	Mix_HaltChannel(fadChannel);
+	oslink.stopSound(fadChannel);
 
 	if (fadeMode < 3)
 	{
@@ -651,7 +651,7 @@ bool Viewer::ShowFade(int fadeMode)
 			glLoadIdentity();
 			drawVectorList(wiz);
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 		  }
 		clearArea(&TXTPRI);
 		while(SDL_PollEvent(&event)) ; // clear event buffer
@@ -681,19 +681,19 @@ bool Viewer::draw_fade()
 	if ((!done && delay1 > delay + buzzStep) && fadeVal != 0)
 	{
 		// Set volume of buzz
-		Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+		oslink.setTrackGain(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
 
 		glLoadIdentity();
 		drawVectorList(W1_VLA);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		VCTFAD += fadeVal;
 		if ((VCTFAD & 0x80) != 0)
 		{
 			// do sound crash
-			Mix_HaltChannel(fadChannel);
-			Mix_Volume(fadChannel, oslink.volumeLevel);
-			Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-			while (Mix_Playing(fadChannel) == 1)
+			oslink.stopSound(fadChannel);
+			oslink.setTrackGain(fadChannel, oslink.volumeLevel);
+			oslink.playSound(fadChannel, creature.kaboom, 0);
+			while (oslink.isSoundPlaying(fadChannel) == 1)
 			{
 				// Call keyboard routine ???
 			}
@@ -715,13 +715,13 @@ bool Viewer::draw_fade()
 		glLoadIdentity();
 		drawVectorList(W1_VLA);
 		drawArea(&TXTPRI);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		delay2 = SDL_GetTicks();
 		if (delay2 > delay + midPause)
 		{
 			// do sound crash
-			Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-			while (Mix_Playing(fadChannel) == 1)
+			oslink.playSound(fadChannel, creature.kaboom, 0);
+			while (oslink.isSoundPlaying(fadChannel) == 1)
 			{
 				// Call keyboard routine ???
 			}
@@ -729,7 +729,7 @@ bool Viewer::draw_fade()
 			fadeVal = 2;
 			delay = SDL_GetTicks();
 			
-			Mix_PlayChannel(fadChannel, creature.buzz, -1);
+			oslink.playSound(fadChannel, creature.buzz, -1);
 		}
 	}
 
@@ -759,23 +759,23 @@ void Viewer::enough_fade()
 	if ((!done && delay1 > delay + buzzStep) && fadeVal != 0)
 	{
 		// Set volume of buzz
-		Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+		oslink.setTrackGain(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
 
 		glLoadIdentity();
 		drawVectorList(W1_VLA);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		VCTFAD += fadeVal;
 		if ((VCTFAD & 0x80) != 0)
 		{
 			displayEnough();
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
+			SDL_GL_SwapWindow(oslink.window);
 
 			// do sound crash
-			Mix_HaltChannel(fadChannel);
-			Mix_Volume(fadChannel, oslink.volumeLevel);
-			Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-			while (Mix_Playing(fadChannel) == 1)
+			oslink.stopSound(fadChannel);
+			oslink.setTrackGain(fadChannel, oslink.volumeLevel);
+			oslink.playSound(fadChannel, creature.kaboom, 0);
+			while (oslink.isSoundPlaying(fadChannel) == 1)
 			{
 				// Call keyboard routine ???
 			}
@@ -798,13 +798,13 @@ void Viewer::enough_fade()
 		drawVectorList(W1_VLA);
 		VCTFAD += fadeVal;
 		drawArea(&TXTPRI);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		delay2 = SDL_GetTicks();
 		if (delay2 > delay + midPause)
 		{
 			// do sound crash
-			Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-			while (Mix_Playing(fadChannel) == 1)
+			oslink.playSound(fadChannel, creature.kaboom, 0);
+			while (oslink.isSoundPlaying(fadChannel) == 1)
 			{
 				// Call keyboard routine ???
 			}
@@ -812,7 +812,7 @@ void Viewer::enough_fade()
 			fadeVal = 2;
 			delay = SDL_GetTicks();
 			
-			Mix_PlayChannel(fadChannel, creature.buzz, -1);
+			oslink.playSound(fadChannel, creature.buzz, -1);
 		}
 	}
 
@@ -830,7 +830,7 @@ void Viewer::death_fade(int WIZ[])
 	if ((delay1 > delay + buzzStep) && fadeVal != 0)
 	{
 		// Set volume of buzz
-		Mix_Volume(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
+		oslink.setTrackGain(fadChannel, ((32 - VCTFAD) / 2) * (oslink.volumeLevel / 16) );
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		glMatrixMode(GL_MODELVIEW);
@@ -839,18 +839,18 @@ void Viewer::death_fade(int WIZ[])
 		glColor3fv(fgColor);
 		glLoadIdentity();
 		drawVectorList(WIZ);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 		VCTFAD += fadeVal;
 		if ((VCTFAD & 0x80) != 0)
 		{
 			// do sound crash
-			Mix_HaltChannel(fadChannel);
-			Mix_Volume(fadChannel, oslink.volumeLevel);
+			oslink.stopSound(fadChannel);
+			oslink.setTrackGain(fadChannel, oslink.volumeLevel);
 			glLoadIdentity();
 			drawArea(&TXTPRI);
-			SDL_GL_SwapBuffers();
-			Mix_PlayChannel(fadChannel, creature.kaboom, 0);
-			while (Mix_Playing(fadChannel) == 1)
+			SDL_GL_SwapWindow(oslink.window);
+			oslink.playSound(fadChannel, creature.kaboom, 0);
+			while (oslink.isSoundPlaying(fadChannel) == 1)
 			{
 				// Call keyboard routine ???
 			}
@@ -867,7 +867,7 @@ void Viewer::death_fade(int WIZ[])
 		glLoadIdentity();
 		drawVectorList(WIZ);
 		drawArea(&TXTPRI);
-		SDL_GL_SwapBuffers();
+		SDL_GL_SwapWindow(oslink.window);
 	}
 }
 
@@ -2095,7 +2095,7 @@ void Viewer::drawMenu(menu mainMenu, int menu_id, int highlight)
    }
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2145,7 +2145,7 @@ void Viewer::drawMenuList(int x, int y, char *title, char *list[], int listSize,
    }
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 
@@ -2186,7 +2186,7 @@ void Viewer::drawMenuScrollbar(char *title, int current)
   }
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2206,7 +2206,7 @@ void Viewer::drawMenuStringTitle(char *title)
  drawString(0, 0, title, strlen(title));
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2222,7 +2222,7 @@ void Viewer::drawMenuString(char *currentString)
  drawString(strlen(currentString), 2, "_", 1);
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }
 
 /****************************************************************
@@ -2255,5 +2255,5 @@ void Viewer::aboutBox(void)
  drawString(1,18, "MANY OTHERS NOT MENTIONED HERE!", 31);
 
   // Update the screen
- SDL_GL_SwapBuffers();
+ SDL_GL_SwapWindow(oslink.window);
  }

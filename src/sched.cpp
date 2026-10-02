@@ -56,7 +56,7 @@ void Scheduler::Reset()
 	NOISEF = 0;
 	NOISEV = 0;
 	ZFLAG = 0;
-	hrtChannel=0;
+	// hrtChannel is assigned from OS_Link during init(); see Creature::Reset().
 
 	for (int ctr = 0; ctr < 38; ++ctr)
 		TCBLND[ctr].clear();
@@ -222,8 +222,8 @@ void Scheduler::CLOCK()
 				player.HEARTC = player.HEARTR;
 				
 				// make sound
-				Mix_PlayChannel(hrtChannel, hrtSound[(dodBYTE) (player.HEARTS + 1)], 0);
-				while (Mix_Playing(hrtChannel) == 1) ; // !!!
+				oslink.playSound(hrtChannel, hrtSound[(dodBYTE) (player.HEARTS + 1)], 0);
+				while (oslink.isSoundPlaying(hrtChannel) == 1) ; // !!!
 
 				if (player.HEARTF != 0)
 				{
@@ -288,8 +288,8 @@ bool Scheduler::fadeLoop()
 	viewer.displayWelcomeMessage();
 
 	// Start buzz
-	Mix_Volume(viewer.fadChannel, 0);
-	Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
+	oslink.setTrackGain(viewer.fadChannel, 0);
+	oslink.playSound(viewer.fadChannel, creature.buzz, -1);
 	
 	while(true)
 	{
@@ -302,14 +302,14 @@ bool Scheduler::fadeLoop()
 			}
 
 			// Stop buzz
-			Mix_HaltChannel(viewer.fadChannel);
+			oslink.stopSound(viewer.fadChannel);
 
 			return false;	// auto-play mode off == start demo game
 		}
 		if ( viewer.draw_fade() )
 		{
 			// Stop buzz
-			Mix_HaltChannel(viewer.fadChannel);
+			oslink.stopSound(viewer.fadChannel);
 
 			return true;	// auto-play mode on == start regular game
 		}
@@ -335,8 +335,8 @@ void Scheduler::deathFadeLoop()
 	}
 
 	// Start buzz
-	Mix_Volume(viewer.fadChannel, 0);
-	Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
+	oslink.setTrackGain(viewer.fadChannel, 0);
+	oslink.playSound(viewer.fadChannel, creature.buzz, -1);
 	
 	while (!viewer.done)
 	{
@@ -345,7 +345,7 @@ void Scheduler::deathFadeLoop()
 	}
 
 	// Stop buzz
-	Mix_HaltChannel(viewer.fadChannel);
+	oslink.stopSound(viewer.fadChannel);
 
 	while(SDL_PollEvent(&event))
 	{
@@ -387,8 +387,8 @@ void Scheduler::winFadeLoop()
 	}
 
 	// Start buzz
-	Mix_Volume(viewer.fadChannel, 0);
-	Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
+	oslink.setTrackGain(viewer.fadChannel, 0);
+	oslink.playSound(viewer.fadChannel, creature.buzz, -1);
 	
 	while (!viewer.done)
 	{
@@ -397,7 +397,7 @@ void Scheduler::winFadeLoop()
 	}
 
 	// Stop buzz
-	Mix_HaltChannel(viewer.fadChannel);
+	oslink.stopSound(viewer.fadChannel);
 
 	while(true)
 	{
@@ -427,14 +427,11 @@ bool Scheduler::keyCheck()
 	{
 		switch(event.type)
 		{
-		case SDL_KEYDOWN:
-			return ( keyHandler(&event.key.keysym) );
+		case SDL_EVENT_KEY_DOWN:
+			return ( keyHandler(&event.key) );
 			break;
-		case SDL_QUIT:
+		case SDL_EVENT_QUIT:
 			oslink.quitSDL(0); // eventually change to meta-menu
-			break;
-		case SDL_VIDEOEXPOSE:
-			SDL_GL_SwapBuffers();
 			break;
 		}
 	}
@@ -442,19 +439,19 @@ bool Scheduler::keyCheck()
 }
 
 // Used by wizard fade in/out function
-bool Scheduler::keyHandler(SDL_keysym * keysym)
+bool Scheduler::keyHandler(const SDL_KeyboardEvent * key)
 {
 	bool rc;
 
-	switch(keysym->sym)
+	switch(key->key)
 	{
 	case SDLK_ESCAPE:
-		Mix_HaltChannel(viewer.fadChannel);
+		oslink.stopSound(viewer.fadChannel);
 
 		rc = oslink.main_menu();  // calls the meta-menu
 
-		Mix_Volume(viewer.fadChannel, 0);
-		Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
+		oslink.setTrackGain(viewer.fadChannel, 0);
+		oslink.playSound(viewer.fadChannel, creature.buzz, -1);
 		return rc;
 	default:
 		return true;
@@ -469,14 +466,11 @@ bool Scheduler::EscCheck()
 	{
 		switch(event.type)
 		{
-		case SDL_KEYDOWN:
-			return ( keyHandler(&event.key.keysym) );
+		case SDL_EVENT_KEY_DOWN:
+			return ( keyHandler(&event.key) );
 			break;
-		case SDL_QUIT:
+		case SDL_EVENT_QUIT:
 			oslink.quitSDL(0); // eventually change to meta-menu
-			break;
-		case SDL_VIDEOEXPOSE:
-			SDL_GL_SwapBuffers();
 			break;
 		}
 	}
@@ -484,19 +478,19 @@ bool Scheduler::EscCheck()
 }
 
 // Used by wizard fade in/out function
-bool Scheduler::EscHandler(SDL_keysym * keysym)
+bool Scheduler::EscHandler(const SDL_KeyboardEvent * key)
 {
 	bool rc;
 
-	switch(keysym->sym)
+	switch(key->key)
 	{
 	case SDLK_ESCAPE:
-		Mix_HaltChannel(viewer.fadChannel);
+		oslink.stopSound(viewer.fadChannel);
 
 		rc = oslink.main_menu();  // Calls the meta-menu
 
-		Mix_Volume(viewer.fadChannel, 0);
-		Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
+		oslink.setTrackGain(viewer.fadChannel, 0);
+		oslink.playSound(viewer.fadChannel, creature.buzz, -1);
 		return (!rc);
 	default:
 		return false;

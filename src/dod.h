@@ -20,15 +20,9 @@ is held by Douglas J. Morgan.
 #define DOD_COMMON_HEADER
 
 // SDL Headers
-#ifdef LINUX
-#include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
-#include <SDL/SDL_mixer.h>
-#else
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL_mixer.h>
-#endif
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 // Standard headers
 #include <stdio.h>
@@ -67,14 +61,34 @@ public:
 				   curWidth(512.0L), curHeight(384.0L)
 	{}
 	
-	// Sets the data members based on screen width
-	// (assumes a 4/3 width/height ratio)
-	void setCurWH(double W)
+	// Sets the data members based on the ACTUAL window size in pixels.
+	// The game is drawn into a 4:3 area - the original CoCo 256x192 aspect -
+	// which is scaled to fit inside the window and then centered in it, leaving
+	// symmetric gutters. The 4:3 box width is kept to a multiple of 256 so the
+	// 32x32 maze cells stay square and integral, as the original code intended.
+	//
+	// Note this takes the *window* size, not the requested game resolution. The
+	// distinction matters: when the desktop is a different aspect ratio than 4:3
+	// (a 1920x1080 monitor, say), the game resolution no longer describes the
+	// real drawable, and assuming it did is what pinned the view to one corner.
+	void setCurWH(double W, double H)
 	{
-		curWidth = ((int) W / (int) 256) * (int) 256;
+		double fitW = W;
+		double fitH = fitW * 0.75L;
+
+		// Constrain by whichever axis is too small.
+		if(fitH > H)
+		{
+			fitH = H;
+			fitW = fitH / 0.75L;
+		}
+
+		curWidth  = ((int) fitW / (int) 256) * (int) 256;
 		curHeight = (curWidth * 0.75L);
-		offX = (W - curWidth) / 2;
-		offY = (offX * 0.75L);
+
+		// Center the 4:3 area inside the window on each axis independently.
+		offX = (W - curWidth)  / 2;
+		offY = (H - curHeight) / 2;
 	}
 	
 	// Calculates absolute screen X-coordinate based on DoD X-coordinate
@@ -519,7 +533,7 @@ public:
 		}
 	}
 
-	static Mix_Chunk *LoadSound(char *snd);
+	static MIX_Audio *LoadSound(char *snd);
 };
 
 /*******************************************************************

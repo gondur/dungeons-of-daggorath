@@ -22,6 +22,11 @@ is held by Douglas J. Morgan.
 #ifndef DOD_VIEWER_HEADER
 #define DOD_VIEWER_HEADER
 
+// GLU is needed for gluOrtho2D() in setup_opengl(). SDL 1.2 bundled the GL
+// headers (and the project got GLU via -lGLU); SDL3's SDL_opengl.h no longer
+// pulls in the GLU entry points, so include it explicitly.
+#include <GL/glu.h>
+
 #include "dod.h"
 #include "dodgame.h"
 
@@ -94,7 +99,7 @@ public:
 	int			fadeVal;
 	dodBYTE		UPDATE;
 	dodSHORT	display_mode; // 0 = map, 1 = 3D, 2 = Examine, 3 = Prepare
-	int			fadChannel;
+	MIX_Track *	fadChannel;
 
 	int			buzzStep;
 	int			midPause;

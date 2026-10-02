@@ -617,9 +617,9 @@ void Player::PATTK()
 	PDAM += ((PPOW * (((int) PMGO + (int) PPHO) / 8)) >> 7);
 
 	// make sound for appropriate object
-	Mix_PlayChannel(object.objChannel,
+	oslink.playSound(object.objChannel,
 		object.objSound[U->obj_type], 0);
-	while (Mix_Playing(object.objChannel) == 1)
+	while (oslink.isSoundPlaying(object.objChannel) == 1)
 	{
 		if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 		{
@@ -670,8 +670,8 @@ void Player::PATTK()
 	}
 
 	// make KLINK sound
-	Mix_PlayChannel(object.objChannel, klink, 0);
-	while (Mix_Playing(object.objChannel) == 1)
+	oslink.playSound(object.objChannel, klink, 0);
+	while (oslink.isSoundPlaying(object.objChannel) == 1)
 	{
 		if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 		{
@@ -712,8 +712,8 @@ void Player::PATTK()
 	viewer.PUPDAT();
 
 	// do loud explosion sound
-	Mix_PlayChannel(object.objChannel, bang, 0);
-	while (Mix_Playing(object.objChannel) == 1)
+	oslink.playSound(object.objChannel, bang, 0);
+	while (oslink.isSoundPlaying(object.objChannel) == 1)
 	{
 		if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 		{
@@ -761,8 +761,8 @@ void Player::PATTK()
 		viewer.VYSCALf = 128.0f;
 /*
 		// Start buzz
-		Mix_Volume(viewer.fadChannel, 0);
-		Mix_PlayChannel(viewer.fadChannel, creature.buzz, -1);
+		oslink.setTrackGain(viewer.fadChannel, 0);
+		oslink.playSound(viewer.fadChannel, creature.buzz, -1);
 
 		while (!viewer.done)
 		{
@@ -771,7 +771,7 @@ void Player::PATTK()
 		}
 
 		// Stop buzz
-		Mix_HaltChannel(viewer.fadChannel);
+		oslink.stopSound(viewer.fadChannel);
 */
 		viewer.ShowFade(Viewer::FADE_MIDDLE);
 
@@ -1127,9 +1127,9 @@ void Player::PINCAN()
 				object.OCBFIL(object.OBJTYP, PLHAND);
 
 				// make ring sound
-				Mix_PlayChannel(object.objChannel,
+				oslink.playSound(object.objChannel,
 					object.objSound[object.OCBLND[PLHAND].obj_type], 0);
-				while (Mix_Playing(object.objChannel) == 1)
+				while (oslink.isSoundPlaying(object.objChannel) == 1)
 				{
 					if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 					{
@@ -1179,9 +1179,9 @@ void Player::PINCAN()
 				object.OCBFIL(object.OBJTYP, PRHAND);
 
 				// make ring sound
-				Mix_PlayChannel(object.objChannel,
+				oslink.playSound(object.objChannel,
 					object.objSound[object.OCBLND[PRHAND].obj_type], 0);
-				while (Mix_Playing(object.objChannel) == 1)
+				while (oslink.isSoundPlaying(object.objChannel) == 1)
 				{
 					if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 					{
@@ -1662,7 +1662,7 @@ void Player::ShowTurn(dodBYTE A)
 					viewer.drawVector((x*inc*dir)+offset,y0,(x*inc*dir)+offset,y1);
 					viewer.drawArea(&viewer.TXTSTS);
 					viewer.drawArea(&viewer.TXTPRI);
-					SDL_GL_SwapBuffers();
+					SDL_GL_SwapWindow(oslink.window);
 					redraw = false;
 				}
 			} while (scheduler.curTime < ticks1 + turnDelay);
@@ -1717,9 +1717,9 @@ void Player::PUSE()
 		viewer.PUPDAT();
 
 		// make torch sound
-		Mix_PlayChannel(object.objChannel,
+		oslink.playSound(object.objChannel,
 			object.objSound[object.OCBLND[idx].obj_type], 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{
@@ -1738,9 +1738,9 @@ void Player::PUSE()
 		object.OCBLND[idx].obj_reveal_lvl = 0;
 		
 		// make flask sound
-		Mix_PlayChannel(object.objChannel,
+		oslink.playSound(object.objChannel,
 			object.objSound[object.OCBLND[idx].obj_type], 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{
@@ -1759,9 +1759,9 @@ void Player::PUSE()
 		object.OCBLND[idx].obj_reveal_lvl = 0;
 		
 		// make flask sound
-		Mix_PlayChannel(object.objChannel,
+		oslink.playSound(object.objChannel,
 			object.objSound[object.OCBLND[idx].obj_type], 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{
@@ -1782,9 +1782,9 @@ void Player::PUSE()
 		object.OCBLND[idx].obj_reveal_lvl = 0;
 		
 		// make flask sound
-		Mix_PlayChannel(object.objChannel,
+		oslink.playSound(object.objChannel,
 			object.objSound[object.OCBLND[idx].obj_type], 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{
@@ -1805,9 +1805,9 @@ void Player::PUSE()
 		}
 		
 		// make scroll sound
-		Mix_PlayChannel(object.objChannel,
+		oslink.playSound(object.objChannel,
 			object.objSound[object.OCBLND[idx].obj_type], 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{
@@ -1830,9 +1830,9 @@ void Player::PUSE()
 		}
 		
 		// make scroll sound
-		Mix_PlayChannel(object.objChannel,
+		oslink.playSound(object.objChannel,
 			object.objSound[object.OCBLND[idx].obj_type], 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{
@@ -1931,8 +1931,8 @@ bool Player::PSTEP(dodBYTE dir)
 	else
 	{
 		// do thud sound
-		Mix_PlayChannel(object.objChannel, thud, 0);
-		while (Mix_Playing(object.objChannel) == 1)
+		oslink.playSound(object.objChannel, thud, 0);
+		while (oslink.isSoundPlaying(object.objChannel) == 1)
 		{
 			if (scheduler.curTime >= scheduler.TCBLND[0].next_time)
 			{

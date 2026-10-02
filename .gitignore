@@ -1,0 +1,3 @@
+# Build artifacts from `make -C src`
+src/*.o
+src/dod

@@ -86,9 +86,9 @@ public:
 	int			wizDelay;
 	bool		turning;
 
-	Mix_Chunk *	klink;
-	Mix_Chunk * thud;
-	Mix_Chunk * bang;
+	MIX_Audio *	klink;
+	MIX_Audio * thud;
+	MIX_Audio * bang;
 
 private:
 };
